@@ -1,0 +1,99 @@
+1. Overview:
+This project investigates social network graph’s structure. In particular, it proposes a methodology to derive the minimum number of edges (minimum cut) that if removed, separate the graph in two connected components. It also proposes a methodology to search for high density connected communities (a high density community has more links between vertexes in the same community and a lesser number of edges toward vertexes from other communities) in a graph.
+
+2. Data:
+This project leverages the “facebook_ucsd.txt” data set provided by the Coursera “Capstone: Analyzing (Social) Network Data” course in the week 1 warm-up assignment. The “facebook_ucsd.txt” is an anonymised snapshot of the University of San Diego Facebook social. A unique integer number is used to represent a vertex in the graph and the “facebook_ucsd.txt” describes for each row an edge of the graph using a source and destination node as integer numbers. A Facebook graph is undirected and each line in the “facebook_ucsd.txt” is replicated swapping the source and destination vertex.
+This project aims to analyse the “facebook_ucsd.txt” dataset that consists of 14,947 vertexes and 443,221 edges but I have used smaller versions of the same data set as the “facebook_1000.txt” (consisting of 1,000 vertexes and 1,892 edges) and “facebook_2000.txt” (consisting of 2,000 vertexes and 7,825 edges) for progressively testing and to analyse the growth of their running time with the growth in the datasets.
+
+3. Questions: 
+The scope of this project is to answer the following questions:
+- What is the minimum number of edges that if removed, separate the graph under investigation in two separated components? If the original data set is not a connected graph, answer the question on the connected component in the original graph with more edges.
+- How to divide the graph in a specific number of communities with most of the edges between member of the same community? More specific - find two dense communities subgraphs and report the number of of vertexes, nodes and relative density for each community. If the original data set is not a connected graph, answer the question on the connected component in the original graph with more edges.
+
+4. Algorithms, Data Structures, and Answer to your Question: 
+First Question: The algorithm used to find the minimum number of edges that if removed disconnects the graph in two components, runs multiple iterations of the randomised Karger’s algorithm (https://en.wikipedia.org/wiki/Karger%27s_algorithm) to identify a possible cut and it then chooses the minimum recorded number. The Karger’s algorithm returns a potential cut that may not be the minimum cut and I need to run several iterations selecting the minimum value returned to increase the probability to find the best answer.
+The algorithm implemented can be summarised as:
+- Identify the connected components in the initial graph and select the one with the most number of edges
+        Iterate across all vertexes in the graph running a breath first search first (BFS) and for each iteration
+             Remove the nodes touched from the BFS from the original vertex set and return them as part of a connected component subgraph list
+ - Select from the list of  connected component subgraph the one with more edges and use it for the rest of the process to identify the minimum link
+- Repeat the Karger algorithm (next inner loop) the number of proposed iterations and store a list with the returned numbers of links in the cut
+     While there are more than two vertexes in the graph
+        Pick a random edge in the graph and merge its two vertexes in a single new vertex (contracting the graph)
+        Remove self loop created by merging two nodes
+     Return the number of links between the last two vertexes as a possible feasible cut
+- Find and return the minimum number recorded in the list of potential cuts
+
+The main data structures used in the project are:
+A representation of the graph as an HashMap with the integer key representing a vertex and an ArrayList of Integers value, representing the neighbour nodes
+A LinkedList of graphs (as described in the previous DS) storing the graph’s components 
+A LinkedList of longs to record the running time for each Kager’s iteration as debug times
+A LinkedList of integers to store the minimum cut returned by each iteration of the Karger’s algorithm
+
+The Answer for the first problem is 1 - a single edge removed would divide the largest connected component (14,936 vertexes and 44, 215 undirected links) in the “facebook_ucsd.txt” graph in extra two separated communities.
+This is the list of possible cut identified: [36, 80, 2, 1, 165, 181, 81, 162, 2156, 36, 1, 440, 16, 33, 60, 27, 95, 83, 318, 13, 34, 3, 40, 84, 62, 25, 16, 1, 55, 2, 82, 7, 2, 145, 18, 27, 74, 40, 411, 34, 42, 17, 3, 31, 63, 24, 2, 95, 44, 3, 6, 7, 247, 68, 12, 3, 67, 45, 1894, 657, 20, 45, 31, 3, 8, 120, 479, 47, 35, 24, 73, 113, 9, 18, 3, 18, 158, 29, 630, 22, 4, 167, 83, 171, 15, 43, 2, 119, 23, 49, 6, 62, 77, 14, 190, 28, 38, 83, 11, 53] and the Min/Avg/Max Running time (msec): 155,544 / 298,478 / 605,230 for the 100 iterations.
+
+Second Question - I am going to answer the second question about densely populated communities in a graph using the strategy proposed in the “Capstone: Analysing (Social) Network Data” course in the week 2 lesson 1.
+For definition a “weaker” edge is the link between two nodes that would be the most traversed when considering all shortest paths between each two nodes in the graph. Removing a weaker edge has the highest probability to separate an initial graph in two denser components. I am saying probability because you may have to remove multiple weaker links in a connected component with redundant paths to divide it in two communities.
+
+The algorithm used to answer the second question requires to:
+- Identify the connected components in the initial graph and select the one with the most number of edges
+        Iterate across all vertexes in the graph running a breath first search first (BFS) and for each iteration
+             Remove the nodes touched from the BFS from the original vertex set and return them as part of a connected component subgraph list
+- Select from the list of  connected component subgraph the one with more edges and use it in the rest of the process to identify the communities
+- Repeat until finding the requested number of communities (connected components) in the subgraph under investigation - used the same procedure proposed in the first section of this algorithm to identify the number of communities
+     For each node “source” in the selected subgraph calculate the shortest path tree toward other nodes using breath first search (BFS) algorithm
+            Use the BFS tree to trace the path from each node back to “source” and allocate a unit of flow on each edge traversed by the path
+            Remove an edge with the highest sum of flow units
+- Return the number of vertexes, edges and calculate the density (number of edges in the components divided by the maximum number of edges if the component was fully meshed) for the discovered connected components
+The main data structures used in the project are:
+A representation of the graph as an HashMap with the integer key representing a vertex and an ArrayList of Integers as value, representing the neighbour nodes
+A LinkedList of graphs (as described in the previous DS) to store the graph’s components 
+A representation of the graph from the prospective of edges as a HashMap with a Point as key (java.awt.Point) representing for an edge and an integer as values for storing the flow units
+A Point (java.awt.Point) class as data structure to represent an edge as a couple of two integers
+A LinkedList of longs to record the running time for each iteration of the algorithm that remove a weaker link from the graph as debug times
+
+Answer Second problem: After removing 21 edges from the largest connected component (14,936 vertexes, 443,215 undirected links and density 0.003973) in the “facebook_ucsd.txt”, the algorithm found two more denser communities than the origina initial group. These communities had respectively, 14,933 vertexes / 443,192 edges / 0.003975 density and  3 vertex / 2 edges / 0.666666 densities. I accepted running for only three communities because of the long running time.
+
+Tested for three communities on a smaller data set like "data/facebook_2000.txt" with the largest connected component of (1,755 vertexes, 7,812 undirected links and density 0.005075) finding more interesting larger communities. These communities had respectively [1649, 77, 29] vertexes, [7529, 128, 50] edges and densities [0.00554, 0.04374 0.12315].
+
+5. Algorithm analysis: 
+I am defining V as the number of vertexes and E as the number of edges  in the graph. 
+The core algorithm of the dense community search (harder problem) is seachComponentsIterations method, that is described below in term of metacode.
+
+public void seachComponentsIterations ( for single iteration)
+     ....
+     // this section iterate O(V) times iterating all nodes 
+     for (Integer node:graph.getVertices()) {
+         // BFSTreeUpstream retrieve the breath search first  tree with a complexity O(V+E)
+         BFSTreeUpstream=BFS(node);
+        // the next function allocated flow units on each edge discovered in the BFS tree,  tracing the path from each vertex to each other vertex has a complexity of O(V^2)
+        flowsAccounting.allocateFlows(node, BFSTreeUpstream);
+    }
+    Point edgeToRemove=new Point();
+    // retrieve from the helper class flowsAccounting the edge that has accumulated more flow units require to scan the list of edges O(E)
+    edgeToRemove=flowsAccounting.moreFlow();
+     // remove from the graph the edge with more flow units - both directed links because an undirected graph as O(1)
+    graph.removeEdge(edgeToRemove.x,edgeToRemove.y);
+    graph.removeEdge(edgeToRemove.y,edgeToRemove.x);
+}
+
+Summarizing seachComponentsIterations complexity would be O( V * ( (V+E) + (V^2)) + (E) + (1) +(1)). After removing the less significant elements is O( (V^2+VE) + (V^3) ). 
+In the worse case, we would deal with a fully meshed graph with E = (V * (V-1))/2 or E=O(V^2) that simplifies the formula for seachComponentsIterations in terms of V to O ( (V^2+V^3) + (V^3))  or O(V^3).
+We are going to runs seachComponentsIterations N times when searching the number of communities after N edges removed from the graph, or up to the worse case equal the E (undirected links) when asking to find a number of communities equal the number of vertexes in the graph.
+
+Considering the second case and a fully meshes graph with E=O(N2) to complexity would be up to O(N^5).
+
+
+6. Correctness verification (i.e. testing): 
+In the initial phase, I have verified the algorithms against toy graph models consisting of: a single node, two nodes and one edge, three nodes connected as a string, four nodes connected in a square, four nodes fully meshed, an eight shape with 6 nodes and two eight shapes side by side with 8 nodes. These models were easy to process manually and verify with a debug the consistency of the cut identified, edge proposed for removal based on the number of calculated flows units and the communities shaped removing the edges.
+Using the toy models, I was also able to test some of the extreme data sets like a graph with a single node or two nodes without edges and guarantee the stability or the programs.
+To guarantee that the algorithm of removing edges performed correctly, I verified that the density of a connected component was decreasing for each edge removed. I also verified that when a connected component was divided in two connected components by progressively removing edges, the relative densities of these connected component were higher than the original. This last test verified that I was actually finding close communities with higher number of edges between vertexes part of the community. A final check assured that all the connected components (communities) returned by the algorithm (at its completion) had a higher density that the original component.
+
+7. Reflection: How did your focus change since your project proposal, if at all? What caused these changes?
+
+I initially started to implement methods using recursion that was working using the smaller data sets but forced to rewrite the code with a linear approach after experiencing Stackoverflows errors processing on larger data sets like “facebook_ucsd.txt”.
+
+Considering the random approach on the Kager’s algorithm, I was initially planning to achieve a low error probability in the min cut question that was requiring too many iteration of the algorithm. The running times for the most optimised version still required an average of 5 minutes per iteration on “facebook_ucsd.txt” and I limited the search to a small number of iterations as 100.
+
+For the second question, I was planning to search for communities with a particular density but I have being forced to look instead how to search for a specific number of communities (without consideration for their density) to limit the number of edges to remove and contain the running time on “facebook_ucsd.txt”. 
