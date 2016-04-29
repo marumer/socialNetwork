@@ -1,0 +1,59 @@
+Class name: MinCut.java 
+
+Purpose and description of class:
+The MinCut class supports the search in a graph of the minimum number of edges (minimum cut) that if removed  separate the graph in two separated connected components.
+The algorithm used to find the minimum number of edges to disconnect, runs multiple iterations of the randomised Karger’s algorithm to identify a possible cut that is implemented by the class method Kager(CapGraph workingGraph). The Karger’s selects edges at random and merges its two vertexes in a single node until a single couple of nodes are left in the graph. More time I run the Karger’s algorithm to find a possible cut, better chance to find an actual minimum cut in the set.
+
+Overall Design Justification:
+MinCut class uses the class CapGraph.java to represent the graph under investigation and leverage its method "getCCs" from the CapGraph class to divide the graph in connected components and communities in this exercise.
+findMinCut method is called with the number of iterations or possible cut to retrieve using the Karger method. It stores in debugTimes and minCutList array running times and number of edges in the cut for each iteration, that will be used to find the final solution.
+
+This class assumes the graph to be un-directed that is acceptable to the Facebook's friend graph data set (target for this project). 
+
+***************************************************************************************************************************************
+
+Class name: denseComunities.java
+
+Purpose and description of class:
+DenseCommunities class supports the search for high density connected communities in a graph. A high density community has high number of edges between vertexes in the same community and lower number of edges toward vertexes from other communities.
+
+This class supports two type of searches:
+  - seachComponentsIterations that takes an integer as the number of edges to remove to divide the graph in dense communities
+  - seachComponentsSet that removes from the graph the minimum number of edges to divide it in the requested number of dense communities 
+In the case of seachComponentsSet the search return also the number of iteration required to achieve the requested number of communities
+
+Overall Design Justification:
+The strategy used to separate the graph in communities consists in removing edges from the graph if they are the most traversed edges when considering shorter paths tree between each node in the graph. Removing the most traversed edge has the highest probability to separate an initial graph in more communities but we may need to iterate the process multiple time because the graph may have redundant paths.
+
+DenseCommunities class uses the class CapGraph.java to represent the graph under investigation and leverage its method "getCCs" to divide the graph in connected components (or communities in this exercise). 
+To simplify this class I have created the Flows helper class described below that takes care of storing the unit flows when exploring the breach first searches and it also retrieve the max number of unit flows allocated across all links in the graph.
+All searches take a second boolean parameter that instructs if debug messages should be printed. The searches visualise the number of communities discovered, their relative number of nodes, edges and their relative density
+
+This class assumes the graph to be un-directed that is acceptable to the Facebook's friend graph data set (target for this project)
+
+***************************************************************************************************************************************
+
+Class name: CapGraph.java
+
+Purpose and description of class:
+
+The CapGraph class is an helper that implements the Graph's interface providing support of a graph data structure and method to manipulate the graph. The class's graph is stored in term of a source node and a list of its neighbours represented as Integers.
+In addition to the standard add, remove, show vertexes and edges methods, this project uses the CapGraph class to merge two nodes when contracting the graph, to retrieve a list of connected component subgraphs in the class’ graphs and to clone a graph that can be altered without losing the original data.
+
+Overall Design Justification:
+The class provided already a getSCCs method to retrieve the strongly connected components that use recursion but I added a method getCCs tailored for undirected graph to retrieve the connect component in a graph using linear programming after experiencing stackoverflow on larger graph that I have attributed to the use of recursion.
+I have extended the class with mergeVertexes method that is extensively used in the search for dense communities when contracting the graph nodes. I decided instead of creating a new node with a new integer to contract the two on the node with the lower integer index to simplify the procedure.
+
+I have also extended the class with a clone method that provide a copy of a graph to be used in computation that need to alter the original graph in more iterations.
+
+***************************************************************************************************************************************
+
+Class name: Flows.java
+
+Purpose and description of class:
+The flow class is a basic helper class that stores a graph' representation in term of edges and allows to store flow units per edge. This class provide a procedure given a BFS tree to walk from each node in the tree back to the source of the tree and allocate a flow unit per edge traversed. The class supports also moreFlow method to return the edge with more accumulated flow units. 
+
+Overall Design Justification:
+The class represents a directed link as a couple of Integers (x source and d destination) and use a Point class (import java.awt.Point) for its representation. The main justification for this class is that CapGraph provide a graph representation from the point of view of nodes and their neighbours but allocating flows on edges required a DS with edges as key.
+
+This class assumes the graph to be un-directed that is acceptable to the Facebook's friend graph data set (target for this project). An edge key uses a couple of Integer (source node, destination node) and I decided to store it as (min Integer, max Integer) instead of having to undirected edges.
